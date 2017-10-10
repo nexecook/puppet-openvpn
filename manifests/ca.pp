@@ -95,15 +95,16 @@ define openvpn::ca(
   $city,
   $organization,
   $email,
-  $common_name  = 'server',
-  $group        = false,
-  $ssl_key_size = 1024,
-  $ca_expire    = 3650,
-  $key_expire   = 3650,
-  $key_cn       = '',
-  $key_name     = '',
-  $key_ou       = '',
-  $tls_auth     = false,
+  $common_name      = 'server',
+  $group            = false,
+  $ssl_key_size     = 1024,
+  $ca_expire        = 3650,
+  $key_expire       = 3650,
+  $default_crl_days = 3650,
+  $key_cn           = '',
+  $key_name         = '',
+  $key_ou           = '',
+  $tls_auth         = false,
 ) {
 
   include openvpn
@@ -159,6 +160,16 @@ define openvpn::ca(
       target => "${etc_directory}/openvpn/${name}/easy-rsa/openssl-1.0.0.cnf",
       before => Exec["initca ${name}"],
     }
+  }
+
+  ini_setting { "set default_crl_days ${name}":
+    ensure  => present,
+    path    => "${etc_directory}/openvpn/${name}/easy-rsa/openssl.cnf",
+    section => ' CA_default ',
+    setting => 'default_crl_days',
+    value   => $default_crl_days,
+    require => File["${etc_directory}/openvpn/${name}/easy-rsa/openssl.cnf"],
+    before  => Exec["initca ${name}"],
   }
 
   exec { "generate dh param ${name}":
